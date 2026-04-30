@@ -1,62 +1,62 @@
 #!/bin/bash
 PSQL="psql --username=freecodecamp --dbname=number_guess -t --no-align -c"
 
-echo -e "\nEnter your username:"
-read USERNAME
+echo -e "\nEnter your Name:"
+read USER
 
-USERNAME_RESULT=$($PSQL "SELECT username FROM players WHERE username='$USERNAME'")
-USER_ID_RESULT=$($PSQL "SELECT user_id FROM players WHERE username='$USERNAME'")
+DB_USERNAME=$($PSQL "SELECT username FROM players WHERE username='$USER'")
+DB_ID=$($PSQL "SELECT user_id FROM players WHERE username='$USER'")
 
 
-if [[ -z $USERNAME_RESULT ]]
+if [[ -z $DB_USERNAME ]]
   then
-    echo -e "\nWelcome, $USERNAME! It looks like this is your first time here.\n"
-    INSERT_USERNAME_RESULT=$($PSQL "INSERT INTO players(username) VALUES ('$USERNAME')")
+    echo -e "\nWelcome, $USER! It looks like this is your first time here.\n"
+    INSERT_USERNAME_RESULT=$($PSQL "INSERT INTO players(username) VALUES ('$USER')")
     
   else
     
-    GAMES_PLAYED=$($PSQL "SELECT COUNT(game_id) FROM games LEFT JOIN players USING(user_id) WHERE username='$USERNAME'")
-    BEST_GAME=$($PSQL "SELECT MIN(number_of_guesses) FROM games LEFT JOIN players USING(user_id) WHERE username='$USERNAME'")
+    GAMES_PLAYED=$($PSQL "SELECT COUNT(game_id) FROM games LEFT JOIN players USING(user_id) WHERE username='$USER'")
+    BEST_GAME=$($PSQL "SELECT MIN(number_of_guesses) FROM games LEFT JOIN players USING(user_id) WHERE username='$USER'")
 
-    echo Welcome back, $USERNAME\! You have played $GAMES_PLAYED games, and your best game took $BEST_GAME guesses.
+    echo Welcome back, $USER\! You have played $GAMES_PLAYED games, and your best game took $BEST_GAME guesses.
 fi
 
-SECRET_NUMBER=$(( RANDOM % 1000 + 1 ))
+RANDOM_NUMBER=$(( RANDOM % 1000 + 1 ))
 
-GUESS_COUNT=0
+GUESSES=0
 
 echo "Guess the secret number between 1 and 1000:"
 read GUESS
 
-until [[ $GUESS == $SECRET_NUMBER ]]
+until [[ $GUESS == $RANDOM_NUMBER ]]
 do
   
   if [[ ! $GUESS =~ ^[0-9]+$ ]]
     then
       echo -e "\nThat is not an integer, guess again:"
       read GUESS
-      ((GUESS_COUNT++))
+      ((GUESSES++))
     
 
     else
-      if [[ $GUESS < $SECRET_NUMBER ]]
+      if [[ $GUESS < $RANDOM_NUMBER ]]
         then
           echo "It's higher than that, guess again:"
           read GUESS
-          ((GUESS_COUNT++))
+          ((GUESSES++))
         else 
           echo "It's lower than that, guess again:"
           read GUESS
-          ((GUESS_COUNT++))
+          ((GUESSES++))
       fi  
   fi
 
 done
 
-((GUESS_COUNT++))
+((GUESSES++))
 
-USER_ID_RESULT=$($PSQL "SELECT user_id FROM players WHERE username='$USERNAME'")
+DB_ID=$($PSQL "SELECT user_id FROM players WHERE username='$USER'")
 
-INSERT_GAME_RESULT=$($PSQL "INSERT INTO games(user_id, secret_number, number_of_guesses) VALUES ($USER_ID_RESULT, $SECRET_NUMBER, $GUESS_COUNT)")
+RESULT=$($PSQL "INSERT INTO games(user_id, secret_number, number_of_guesses) VALUES ($DB_ID, $RANDOM_NUMBER, $GUESSES)")
 
-echo You guessed it in $GUESS_COUNT tries. The secret number was $SECRET_NUMBER. Nice job\!
+echo You guessed it in $GUESSES tries. The secret number was $RANDOM_NUMBER. Nice job\!
